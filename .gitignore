@@ -1,0 +1,7 @@
+chroma_db/
+*.sqlite3
+*.bin
+laws_datas/*.pdf
+.env
+__pycache__/
+*.pyc
