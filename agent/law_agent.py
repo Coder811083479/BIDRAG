@@ -1,5 +1,5 @@
 
-class BidAgent:
+class LawAgent:
     def __init__(self, vectorstore, docs_retriever, llm_api, docs_nums=10):
         self.vectorstore = vectorstore
         self.docs_retriever = docs_retriever
@@ -44,13 +44,12 @@ if __name__ == '__main__':
 
     csv_file_path = r"E:\WorkSpace\RAG\bid_datas"
 
-
     from retrieval import vector_persist_db,vector_retrieval
     from models.LLM import get_completion_deepseek
 
 
     vectorstore = vector_persist_db.init_update_bid_data_vectorstore()
-    bidagent = BidAgent(vectorstore, docs_retriever=vector_retrieval.get_bid_docs, llm_api=get_completion_deepseek, docs_nums=10)
+    bidagent = LawAgent(vectorstore, docs_retriever=vector_retrieval.get_bid_docs, llm_api=get_completion_deepseek, docs_nums=10)
 
     # 对话循环
     while True:

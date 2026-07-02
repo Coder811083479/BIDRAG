@@ -1,6 +1,3 @@
-
-
-
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
@@ -17,7 +14,9 @@ if __name__ == '__main__':
     from agent.intent_agent import IntentAgent
     from agent.bid_agent import BidAgent
     # from agent.law_agent import LawAgent
-    # from agent.other_agent import OtherAgent
+    from agent.other_agent import OtherAgent
+    from retrieval import vector_persist_db, vector_retrieval
+    from models.LLM import get_completion_deepseek
     # from models.VectorStore import VectorStore
     import json
 
@@ -50,8 +49,7 @@ if __name__ == '__main__':
                 # 路由到对应的agent
                 if intent_name == "bid_info_search":
                     print("招投标信息查询。。。")
-                    from retrieval import vector_persist_db,vector_retrieval
-                    from models.LLM import get_completion_deepseek
+
                     vectorstore = vector_persist_db.init_update_bid_data_vectorstore()
                     bidagent = BidAgent(vectorstore, docs_retriever=vector_retrieval.get_bid_docs, llm_api=get_completion_deepseek, docs_nums=10)
                     bid_response = bidagent.chat(query)
@@ -63,11 +61,10 @@ if __name__ == '__main__':
                     # law_response = lawagent.chat(query)
                     # print(law_response)
                 elif intent_name == "other":
-                    print("无关问题咨询。。。")
-                    pass
-                    # otheragent = OtherAgent(vectorstore, docs_retriever=vector_retrieval.get_other_docs, llm_api=get_completion_deepseek, docs_nums=10)
-                    # other_response = otheragent.chat(query)
-                    # print(other_response)
+                    print("其他问题咨询。。。")
+                    otheragent = OtherAgent(llm_api=get_completion_deepseek)
+                    other_response = otheragent.chat(query)
+                    print(other_response)
                 else:
                     print("无法识别用户意图")
         except json.JSONDecodeError:
