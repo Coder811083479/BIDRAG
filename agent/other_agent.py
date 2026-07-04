@@ -6,7 +6,7 @@ class OtherAgent:
     def chat(self, user_query):
         # 构建prompt
         other_prompt_template = f'''
-         你是一个智能助手，友好文明的问答用户提出的问题，如果不知道，就回复用户："这个问题超出了我的能力范围，请重新提问。"
+         你是一个智能助手，能友好文明地问答用户提出的问题，如果不知道，就回复用户："这个问题超出了我的能力范围，请重新提问。"
 
          用户的问题：{user_query}
          

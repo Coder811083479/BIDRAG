@@ -1,7 +1,15 @@
+#.gitignore 是 Git 的忽略配置文件，放在项目根目录，用来告诉 Git：哪些文件 / 文件夹不需要纳入版本控制，不要追踪、不要提交到仓库。
+# 向量数据库
 chroma_db/
 *.sqlite3
 *.bin
+
+# 数据文件
 laws_datas/*.pdf
+
+# 环境秘钥
 .env
+
+#缓存文件
 __pycache__/
 *.pyc

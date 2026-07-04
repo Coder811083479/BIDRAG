@@ -6,7 +6,7 @@ class BidAgent:
         self.llm_api = llm_api
         self.docs_nums = docs_nums
 
-    def chat(self, user_query):
+    def bid_chat(self, user_query):
         # 1.检索
         # 招投标数据
         search_results = self.docs_retriever(user_query, self.vectorstore, self.docs_nums)
@@ -35,18 +35,24 @@ class BidAgent:
 
 
 if __name__ == '__main__':
-
+    """
+    
+    后期可以修改为mysql数据 NLP2SQL 实现
+    
+    """
     # 初始化招投标智能助手
     print("=== 招投标智能问答系统 ===")
     print("输入 'q' 或 'quit' 退出系统")
     print("输入 'clear' 清除对话历史")
     print("=" * 40)
 
-    csv_file_path = r"E:\WorkSpace\RAG\bid_datas"
+    csv_file_path = r"E:\RAG\data_sources\bid_datas"
 
     from retrieval import vector_persist_db,vector_retrieval
     from models.LLM import get_completion_deepseek
+
     vectorstore = vector_persist_db.init_update_bid_data_vectorstore()
+
     bidagent = BidAgent(vectorstore, docs_retriever=vector_retrieval.get_bid_docs, llm_api=get_completion_deepseek, docs_nums=10)
 
     # 对话循环
@@ -70,5 +76,5 @@ if __name__ == '__main__':
 
         # 执行查询并输出结果
         print("\n正在查询中...")
-        response = bidagent.chat(query)
+        response = bidagent.bid_chat(query)
         print(f"\n回答：{response}")

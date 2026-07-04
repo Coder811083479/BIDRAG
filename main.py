@@ -10,29 +10,27 @@ if __name__ == '__main__':
     print("输入 'clear' 清除对话历史")
     print("=" * 40)
 
-    from models.LLM import get_intent_deepseek
+    from models.LLM import get_intent_deepseek,get_completion_deepseek
     from agent.intent_agent import IntentAgent
     from agent.bid_agent import BidAgent
-    # from agent.law_agent import LawAgent
+    from agent.law_agent import LawAgent
     from agent.other_agent import OtherAgent
     from retrieval import vector_persist_db, vector_retrieval
-    from models.LLM import get_completion_deepseek
-    # from models.VectorStore import VectorStore
     import json
 
     intent_agent = IntentAgent(llm_func=get_intent_deepseek)
-
+    query = None
     while True:
-        query = input("\n请输入与招投标相关的问题：").strip()
+        # query = input("\n请输入与招投标相关的问题：").strip()
+        if not query:
+            query = input("\n请输入与招投标相关的问题：").strip()
         if query.lower() in ['q', 'quit', '退出']:
             print("感谢使用，再见！")
             break
         if query.lower() in ['clear', '清空']:
             print("对话已清空")
             continue
-        if not query:
-            print("请输入有效问题")
-            continue
+
 
         print("\n正在查询中...")
         intent_response = intent_agent.chat(query)
@@ -52,19 +50,23 @@ if __name__ == '__main__':
 
                     vectorstore = vector_persist_db.init_update_bid_data_vectorstore()
                     bidagent = BidAgent(vectorstore, docs_retriever=vector_retrieval.get_bid_docs, llm_api=get_completion_deepseek, docs_nums=10)
-                    bid_response = bidagent.chat(query)
+                    bid_response = bidagent.bid_chat(query)
                     print(bid_response)
+                    query = input("\n请输入与招投标相关的问题：").strip()
                 elif intent_name == "law_consult":
                     print("招标政策法律法规咨询。。。")
-                    pass
-                    # lawagent = LawAgent(vectorstore, docs_retriever=vector_retrieval.get_law_docs, llm_api=get_completion_deepseek, docs_nums=10)
-                    # law_response = lawagent.chat(query)
-                    # print(law_response)
+
+                    lawagent = LawAgent(llm_api=get_completion_deepseek)
+                    law_response = lawagent.law_chat(query)
+
+                    print(law_response)
+                    query = input("\n请输入与招投标相关的问题：").strip()
                 elif intent_name == "other":
                     print("其他问题咨询。。。")
                     otheragent = OtherAgent(llm_api=get_completion_deepseek)
                     other_response = otheragent.chat(query)
                     print(other_response)
+                    query = input("\n请输入与招投标相关的问题：").strip()
                 else:
                     print("无法识别用户意图")
         except json.JSONDecodeError:

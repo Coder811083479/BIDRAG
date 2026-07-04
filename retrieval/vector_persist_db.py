@@ -3,16 +3,6 @@ import os
 from langchain_chroma import Chroma
 import pandas as pd
 from langchain_core.documents import Document
-from langchain_community.chat_models.tongyi import ChatTongyi
-from langchain_community.embeddings.dashscope import DashScopeEmbeddings
-from config import Config
-
-api_key = Config.DEEPSEEK_API_KEY
-base_url = Config.DEEPSEEK_BASE_URL
-
-# 初始化llm（通义千问）
-llm = ChatTongyi(dashscope_api_key=api_key, model="qwen-max")
-embeddings_model = DashScopeEmbeddings(model="text-embedding-v1")
 
 """
 投招标数据持久化为ChromaDB向量数据库 和增量更新向量数据库
@@ -23,14 +13,18 @@ def init_update_bid_data_vectorstore():
     :param csv_file_path: 招投标数据文件夹路径（扫描文件夹下所有CSV）
     :return: vectorstore  返回招投标数据向量数据库
     '''
+
+    from embeddings.embedding_fn import DashScopeEmbedding
+    embedding_model = DashScopeEmbedding()
+
     # 向量数据库持久化路径
-    persist_dir = r"E:\WorkSpace\RAG\chroma_db"
+    persist_dir = r"E:\WorkSpace\RAG\db\bid_chroma_db"
     os.makedirs(persist_dir, exist_ok=True)
 
     # 元数据记录文件（记录已处理的文件信息）
     metadata_file = os.path.join(persist_dir, "processed_files.json")
 
-    csv_file_path = r"E:\WorkSpace\RAG\bid_datas"
+    csv_file_path = r"E:\WorkSpace\RAG\data_sources\bid_datas"
     # 扫描文件夹下所有CSV文件
     data_dir = csv_file_path
     csv_files = [f for f in os.listdir(data_dir) if f.endswith('.csv')]
@@ -73,15 +67,15 @@ def init_update_bid_data_vectorstore():
         if os.path.exists(os.path.join(persist_dir, "chroma.sqlite3")):
             vectorstore = Chroma(
                 persist_directory=persist_dir,
-                embedding_function=embeddings_model,
-                collection_name="self-query"
+                embedding_function=embedding_model,
+                collection_name="bid_self_query"
             )
         else:
             # 首次创建空向量库
             vectorstore = Chroma(
                 persist_directory=persist_dir,
-                embedding_function=embeddings_model,
-                collection_name="self-query"
+                embedding_function=embedding_model,
+                collection_name="bid_self_query"
             )
 
         # 处理每个新文件
@@ -103,26 +97,51 @@ def init_update_bid_data_vectorstore():
             # 创建Document对象
             docs = []
             for idx, row in df.iterrows():
+                # doc = Document(
+                #     page_content=row["项目名称"],
+                #     metadata={
+                #         "id": row["id"],
+                #         "发布时间": row["发布时间"],
+                #         "类别": row["类别"],
+                #         "来源": row["来源"],
+                #         "省份": row["省份"],
+                #         "市": row["市"],
+                #         "区县": row["区县"],
+                #         "项目编号": row["项目编号"],
+                #         "采购人": row["采购人"],
+                #         "代理机构": row["代理机构"],
+                #         "预算(万元)": float(row["预算(万元)"]),
+                #         "项目地址": row["项目地址"],
+                #         "项目周期": row["项目周期"],
+                #         "中标人": row["中标人"],
+                #         "中标金额(元)": float(row["中标金额(元)"]),
+                #         "中标日期": row["中标日期"]
+                #     }
+                # )
                 doc = Document(
-                    page_content=row["项目名称"],
-                    metadata={
-                        "id": row["id"],
-                        "发布时间": row["发布时间"],
-                        "类别": row["类别"],
-                        "来源": row["来源"],
-                        "省份": row["省份"],
-                        "市": row["市"],
-                        "区县": row["区县"],
-                        "项目编号": row["项目编号"],
-                        "采购人": row["采购人"],
-                        "代理机构": row["代理机构"],
-                        "预算(万元)": float(row["预算(万元)"]),
-                        "项目地址": row["项目地址"],
-                        "项目周期": row["项目周期"],
-                        "中标人": row["中标人"],
-                        "中标金额(元)": float(row["中标金额(元)"]),
-                        "中标日期": row["中标日期"]
-                    }
+                        page_content=f"""
+                                    "id": {row["id"]},
+                                    "项目名称":{row["项目名称"]},
+                                    "发布时间": {row["发布时间"]},
+                                    "类别": {row["类别"]},
+                                    "来源": {row["来源"]},
+                                    "省份": {row["省份"]},
+                                    "市": {row["市"]},
+                                    "区县": {row["区县"]},
+                                    "项目编号": {row["项目编号"]},
+                                    "采购人": {row["采购人"]},
+                                    "代理机构": {row["代理机构"]},
+                                    "预算(万元)": {float(row["预算(万元)"])},
+                                    "项目地址": {row["项目地址"]},
+                                    "项目周期": {row["项目周期"]},
+                                    "中标人": {row["中标人"]},
+                                    "中标金额(元)": {float(row["中标金额(元)"])},
+                                    "中标日期": {row["中标日期"]}
+                                """,
+                        metadata={
+                            "id":idx
+                        },
+                        id = idx
                 )
                 docs.append(doc)
 
@@ -146,8 +165,8 @@ def init_update_bid_data_vectorstore():
         print("所有文件已处理，直接加载向量数据库...")
         vectorstore = Chroma(
             persist_directory=persist_dir,
-            embedding_function=embeddings_model,
-            collection_name="self-query"
+            embedding_function=embedding_model,
+            collection_name="bid_self_query"
         )
         print("向量数据库加载完成")
 
